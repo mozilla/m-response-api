@@ -11,6 +11,7 @@ mozapkpublisher = "*"
 
 [dev-packages]
 "flake8" = "*"
+ipdb = "*"
 
 [requires]
 python_version = "3.6"
