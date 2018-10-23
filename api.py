@@ -1,5 +1,6 @@
 import base64
 import io
+import os
 
 from flask import Flask, make_response, request
 from flask.json import jsonify
@@ -12,6 +13,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
 def get_credentials():
