@@ -1,28 +1,58 @@
-import os
+import base64
+import io
 
 from flask import Flask, make_response, request
 from flask.json import jsonify
 
-from mozapkpublisher.common.googleplay import connect
+import boto3
+import httplib2
+
+from apiclient.discovery import build
+from oauth2client.service_account import ServiceAccountCredentials
 
 
 app = Flask(__name__)
 
 
-# Settings
-PLAY_ACCOUNT = os.getenv('PLAY_ACCOUNT')
-PLAY_CREDENTIALS_PATH = os.getenv('PLAY_CREDENTIALS_PATH')
+def get_credentials():
+    """Fetch playstore credentials from SSM"""
+
+    # Fetch credentials from AWS SSM
+    ssm = boto3.client('ssm')
+    key_response = ssm.get_parameter(
+        Name='SumoPlaystoreReviewsKey', WithDecryption=True)
+    account_response = ssm.get_parameter(
+        Name='SumoPlaystoreReviewsAccount', WithDecryption=True)
+
+    # Parse SSM responses
+    account = account_response['Parameter']['Value']
+    key = io.BytesIO(base64.b64decode(key_response['Parameter']['Value']))
+
+    credentials = {
+        'key': key,
+        'account': account
+    }
+    return credentials
 
 
 def get_reviews_service():
     """Create new instance of google play API service."""
-    service = connect(PLAY_ACCOUNT, PLAY_CREDENTIALS_PATH)
+
+    scope = 'https://www.googleapis.com/auth/androidpublisher'
+    credentials = get_credentials()
+    service_credentials = ServiceAccountCredentials.from_p12_keyfile_buffer(
+        credentials['account'], credentials['key'], scopes=scope
+    )
+    http = httplib2.Http()
+    http = service_credentials.authorize(http)
+    service = build('androidpublisher', 'v2', http=http, cache_discovery=False)
     return service.reviews()
 
 
 @app.route('/reviews', methods=['GET'])
 def get_reviews():
     """Get playstore reviews. Proxy playstore API requests."""
+
     packageName = request.args.get('packageName', None)
     nextPageToken = request.args.get('nextPageToken', None)
 
