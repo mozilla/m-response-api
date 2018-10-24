@@ -56,7 +56,7 @@ def get_reviews():
     """Get playstore reviews. Proxy playstore API requests."""
 
     packageName = request.args.get('packageName', None)
-    nextPageToken = request.args.get('nextPageToken', None)
+    nextPageToken = request.args.get('token', None)
 
     if not packageName:
         content = jsonify(msg='Missing `packageName` from request query')
