@@ -63,6 +63,7 @@ def get_reviews():
         return make_response(content, 400)
 
     reviews_service = get_reviews_service()
+    app.logger.info('Playstore API: GET list')
     query = reviews_service.list(packageName=packageName, token=nextPageToken)
 
     return make_response(jsonify(query.execute()), 200)
