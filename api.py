@@ -73,4 +73,46 @@ def get_reviews():
 def post_reviews():
     """Post playstore reviews."""
 
+    # Flag to enable/disable playstore upload
+    UPLOADS_ENABLED = os.getenv('SUMO_PLAYSTORE_UPLOADS_ENABLED', False)
+
+    packageName = request.args.get('packageName', None)
+    reviewId = request.args.get('reviewId', None)
+    replyText = request.args.get('text', None)
+
+    if not packageName:
+        content = jsonify(msg='Missing `packageName` from request')
+        return make_response(content, 400)
+
+    if not reviewId:
+        content = jsonify(msg='Missing `review_id` from request')
+        return make_response(content, 400)
+
+    if not replyText:
+        content = jsonify(msg='Missing `text` from request')
+        return make_response(content, 400)
+
+    payload = {
+        'packageName': packageName,
+        'reviewId': reviewId,
+        'replyText': replyText
+    }
+
+    app.logger.info('Playstore API: POST')
+    app.logger.info('Playstore API - upload - call params: {}'.format(payload))
+
+    if UPLOADS_ENABLED:
+        reviews_service = get_reviews_service()
+        body = {
+            'replyText': replyText
+        }
+        query = reviews_service.reply(
+            packageName=packageName,
+            reviewId=reviewId,
+            body=body
+        )
+        response = query.execute()
+        app.logger.info('Playstore API - response: {}'.format(response))
+        return make_response(jsonify(response), 200)
+
     return make_response(jsonify(msg='POST method not implemented'), 501)
