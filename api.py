@@ -47,7 +47,7 @@ def get_reviews_service():
     )
     http = httplib2.Http()
     http = service_credentials.authorize(http)
-    service = build('androidpublisher', 'v2', http=http, cache_discovery=False)
+    service = build('androidpublisher', 'v3', http=http, cache_discovery=False)
     return service.reviews()
 
 
@@ -100,6 +100,7 @@ def post_reviews():
 
     app.logger.info('Playstore API: POST')
     app.logger.info('Playstore API - upload - call params: {}'.format(payload))
+    app.logger.info('Playstore API - uploads enabled: {}'.format(UPLOADS_ENABLED))
 
     if UPLOADS_ENABLED:
         reviews_service = get_reviews_service()
